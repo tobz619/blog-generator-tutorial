@@ -16,7 +16,3 @@ convertStructure (M.Heading n txt) = Html.h_ n txt
 
 convert :: String -> M.Document -> Html.Html
 convert title = Html.html_ title . foldMap convertStructure
-
-
-process :: String -> String -> String
-process title = Html.render . convert title . M.parseMarkup
