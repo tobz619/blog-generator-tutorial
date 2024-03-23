@@ -1,8 +1,8 @@
-module Convert where
+module HsBlog.Convert where
 
-import qualified Markup as M
-import qualified Html
-import qualified Html.Internal as HI
+import qualified HsBlog.Markup as M
+import qualified HsBlog.Html as Html
+import qualified HsBlog.Html.Internal as HI
 
 
 

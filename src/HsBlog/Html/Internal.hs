@@ -1,4 +1,4 @@
-module Html.Internal where
+module HsBlog.Html.Internal where
 import GHC.Natural (Natural)
 
 newtype Html = Html {render :: String} deriving Show

@@ -1,4 +1,4 @@
-module Markup
+module HsBlog.Markup
     ( Structure(..)
     , Document
     , parseMarkup

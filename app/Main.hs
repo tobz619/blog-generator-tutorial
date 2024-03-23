@@ -1,40 +1,6 @@
 module Main where
 
-import qualified Markup as M 
-import qualified Html as H
-import Convert (convert)
+import qualified HsBlog
 
-import System.Directory
-import System.Environment
-import Control.Monad (when)
-
-
-main = do args <- getArgs
-          case args of
-            [] -> do content <- getContents
-                     putStrLn $ process "Empty title" content
-            
-            [inp, out] -> whenIO (doesFileExist out) $
-                    do whenIO (confirmOverwrite out) $
-                          do content <- readFile inp
-                             writeFile out (process inp content)
-                                
-            _ -> putStrLn "HUsage: runghc Main.hs [-- <inp> <out>]"
-
-confirmOverwrite :: FilePath -> IO Bool
-confirmOverwrite out  =
-    do putStr $ "File " ++ out ++ " exists. "
-       putStrLn "Are you sure you want to overwrite this file?"
-       response <- getLine
-       case response of
-         "y" -> pure True
-         "n" -> pure False
-         _ -> do putStrLn "Invalid input. Use y or n"
-                 confirmOverwrite out
-
-process :: String -> String -> String
-process title = H.render . convert title . M.parseMarkup
-
-whenIO :: Monad m => m Bool -> m () -> m ()
-whenIO cond action =
-  cond >>= when <*> pure action
+main :: IO ()
+main = HsBlog.main
