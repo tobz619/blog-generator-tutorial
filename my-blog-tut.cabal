@@ -62,7 +62,7 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  MyLib
+    exposed-modules:  Convert, Html, Markup
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -95,7 +95,8 @@ executable my-blog-tut
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.2.1,
-        my-blog-tut
+        my-blog-tut,
+        directory == 1.3.7.1
 
     -- Directories containing source files.
     hs-source-dirs:   app

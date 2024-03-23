@@ -1,7 +1,7 @@
 module Html.Internal where
 import GHC.Natural (Natural)
 
-newtype Html = Html String deriving Show
+newtype Html = Html {render :: String} deriving Show
 
 newtype Structure = Structure String deriving Show
 
@@ -38,17 +38,17 @@ ul_, ol_ :: [Structure] -> Structure
 ul_ = Structure . el "ul" . concatMap (el "li" . getStructureString)
 ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 
-render :: Html -> String
-render (Html s) = s
-
+-- | Creates a html string from a string and a structure
 html_ :: String -> Structure -> Html
 html_ title cont = Html $ el "title" title <> getStructureString  cont
 
-
+-- | Extracts the string from our structure
 getStructureString :: Structure -> String
 getStructureString str = case str of
     Structure s -> s
 
+
+-- | Converts key characters into replacements
 escape :: String -> String
 escape =
     let escapeChar c = case c of
