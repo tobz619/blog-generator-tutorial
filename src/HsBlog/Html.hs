@@ -8,6 +8,12 @@ module HsBlog.Html
     , code_
     , render
     , html_
+    , Content
+    , b_
+    , i_
+    , link_
+    , img_
+    , txt_
     , ) where
 
 import HsBlog.Html.Internal

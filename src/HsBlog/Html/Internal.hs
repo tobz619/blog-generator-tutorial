@@ -1,9 +1,11 @@
 module HsBlog.Html.Internal where
 import GHC.Natural (Natural)
 
-newtype Html = Html {render :: String} deriving Show
+newtype Html = Html { render :: String } deriving Show
 
-newtype Structure = Structure String deriving Show
+newtype Content = Content { getContent :: String } deriving Show
+
+newtype Structure = Structure {getStructureString :: String} deriving Show
 
 instance Semigroup Structure where
     (<>) c1 c2 =
@@ -11,6 +13,12 @@ instance Semigroup Structure where
 
 instance Monoid Structure where
     mempty = empty_
+
+instance Semigroup Content where
+  (<>) c1 c2 =  Content (getContent c1 <> getContent c2)
+
+instance Monoid Content where
+  mempty = Content ""
 
 -- | Base case for when the list is empty
 empty_ :: Structure
@@ -20,18 +28,20 @@ empty_ = Structure ""
 el :: String -> String -> String
 el tag content = "<" <> tag <> ">" <> content <> "</" <> tag <> ">"
 
+elAttr :: String -> String -> String -> String
+elAttr tag attrs content =  
+  "<" <> tag <> " " <> attrs <>">" <> content <> "</" <> tag <> ">"
 
 -- | Basic html tags
-head_, p_, li_, code_ :: String -> Structure
-head_  = Structure . el "head" . escape
-p_ = Structure . el "p" . escape
-li_ = Structure . el "li"
+head_, p_ :: Content -> Structure
+head_  = Structure . el "head"  . getContent
+p_ = Structure . el "p" . getContent
+
+h_ :: Natural -> Content -> Structure
+h_ n = Structure . el ("h" <> show n) . getContent
+
+code_ :: String -> Structure
 code_ = Structure . el "pre" . escape
-
-
-h_ :: Natural -> String -> Structure
-h_ n = Structure . el ("h" <> show n) . escape
-
 
 
 ul_, ol_ :: [Structure] -> Structure
@@ -42,11 +52,22 @@ ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 html_ :: String -> Structure -> Html
 html_ title cont = Html $ el "title" title <> getStructureString  cont
 
--- | Extracts the string from our structure
-getStructureString :: Structure -> String
-getStructureString str = case str of
-    Structure s -> s
+txt_ :: String -> Content
+txt_ = Content . escape
 
+link_ :: String -> Content -> Content
+link_ path con = Content $ 
+  elAttr "a" ("href=\"" <> escape path <> "\"") (getContent con)
+
+img_ :: String -> Content
+img_ path =
+  Content $ "<img src=\"" <> escape path <> "\">"
+
+b_ :: Content -> Content
+b_ = Content . el "b" . getContent
+
+i_ :: Content -> Content
+i_ = Content . el "i" . getContent
 
 -- | Converts key characters into replacements
 escape :: String -> String
