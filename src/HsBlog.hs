@@ -1,6 +1,10 @@
 module HsBlog
     ( main
     , process
+    , convertDirectory
+    , convertSingle
+    , confirmOverwrite
+    , whenIO
     ) where
 
 import qualified HsBlog.Markup as M 
@@ -10,7 +14,7 @@ import HsBlog.Convert (convert)
 import System.Directory
 import System.Environment
 import Control.Monad (when)
-
+import System.IO
 
 main :: IO ()
 main = do args <- getArgs
@@ -42,3 +46,12 @@ process title = H.render . convert title . M.parseMarkup
 whenIO :: Monad m => m Bool -> m () -> m ()
 whenIO cond action =
   cond >>= when <*> pure action
+
+convertSingle :: String -> Handle -> Handle -> IO ()
+convertSingle title inp out = do
+  content <- hGetContents inp
+  hPutStrLn out (process title content)
+
+convertDirectory :: FilePath -> FilePath -> Bool -> IO ()
+convertDirectory from to bool = error "Not implemented"
+

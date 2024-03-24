@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-unused-top-binds #-}
 module HsBlog.Markup
     ( Structure(..)
     , Document
@@ -70,7 +71,7 @@ trim :: String -> String
 trim = unwords . words
 
 
--- examples:
+example1, example2, example3 :: [Structure]
 example1 =  [Paragraph "Hello World"]
 
 example2 = [ Paragraph "Remember that multiple lines with no separation are grouped together into a single paragraph but list items remain separate."

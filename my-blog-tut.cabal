@@ -92,7 +92,7 @@ executable hs-blog-generator
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules: OptParser
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -100,7 +100,9 @@ executable hs-blog-generator
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.17.2.1,
-        my-blog-tut
+        my-blog-tut,
+        optparse-applicative,
+        directory
 
     -- Directories containing source files.
     hs-source-dirs:   app
@@ -108,4 +110,4 @@ executable hs-blog-generator
     -- Base language which the package is written in.
     default-language: Haskell2010
 
-    ghc-options: -O
+    ghc-options: -O2
