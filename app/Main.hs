@@ -7,6 +7,7 @@ import System.Exit
 import System.Directory
 import System.IO
 import Control.Applicative ((<|>))
+import Control.Exception (bracket, finally)
 
 main :: IO ()
 main = do
@@ -14,25 +15,24 @@ main = do
     case options of
         ConvertDir inp out b -> HsBlog.convertDirectory inp out b
 
-        ConvertSingle inp out b -> do
-            (title, inpHandle) <- case inp of
-                Stdin -> pure ("", stdin)
-                InputFile file -> (,) file <$> openFile file ReadMode
-
-            outHandle <- case out of
-                Stdout -> pure stdout
-
-                OutputFile file -> do
-                    exists <- doesFileExist file
-                    shouldOpenFile <- if exists
-                                    then (b ||) <$> HsBlog.confirmOverwrite file
-                                    else pure True
-
-                    if shouldOpenFile
-                        then openFile file WriteMode
-                        else exitFailure
+        ConvertSingle inp out b ->
+            withInp inp (\t -> withOut b out . HsBlog.convertSingle t)
 
 
-            HsBlog.convertSingle title inpHandle outHandle
-            hClose inpHandle
-            hClose outHandle
+
+withInp :: SingleInput -> (String -> Handle -> IO r) -> IO r
+withInp  Stdin action = action "" stdin
+withInp  (InputFile file) action = withFile file ReadMode
+                                  (action file)
+
+withOut :: Bool -> SingleOutput -> (Handle -> IO b) -> IO b
+withOut _  Stdout action = action stdout
+withOut b (OutputFile file) action =
+    do exists <- doesFileExist file
+       shouldOpen <- if exists
+        then (b ||) <$> HsBlog.confirmOverwrite file
+        else pure True
+       
+       if shouldOpen
+        then withFile file WriteMode action
+        else exitFailure

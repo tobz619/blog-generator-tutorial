@@ -1,13 +1,13 @@
-{ mkDerivation, base, directory, lib }:
+{ mkDerivation, base, directory, lib, optparse-applicative }:
 mkDerivation {
   pname = "my-blog-tut";
   version = "0.1.0.0";
-  src = /nix/store/z1z7yy3nn6942ilwqmx0mhlr02m1mjlk-my-blog-tut;
+  src = /nix/store/vaig7lzhs1rp3svyjxgw40h4vd2j6y7n-my-blog-tut;
   isLibrary = true;
   isExecutable = true;
   libraryHaskellDepends = [ base directory ];
-  executableHaskellDepends = [ base ];
+  executableHaskellDepends = [ base directory optparse-applicative ];
   homepage = "tobioloke.com";
-  license = lib.licenses.bsd3Only;
-  mainProgram = "my-blog-tut";
+  license = lib.licenses.bsd3;
+  mainProgram = "hs-blog-generator";
 }
