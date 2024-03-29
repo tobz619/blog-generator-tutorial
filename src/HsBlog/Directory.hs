@@ -18,6 +18,8 @@ import Data.Either (fromRight)
 import System.IO (hPutStrLn, stderr)
 import HsBlog (whenIO, confirmOverwrite)
 import Data.Foldable (traverse_)
+import HsBlog.Env (Env(..))
+import Control.Monad.Reader(Reader(..), asks, ask, ReaderT (runReaderT), lift, runReader)
 
 data DirContents = DirContents {
     dcFilesToProcess :: [(FilePath, String)]
@@ -36,14 +38,14 @@ getDirFilesAndContent dirPath = do
 
 applyIoOnList :: (a -> IO b) -> [a] -> IO [(a , Either String b)]
 applyIoOnList f = traverse makeIoPair
-  where makeIoPair a = (,) a <$> 
+  where makeIoPair a = (,) a <$>
                         catch (Right <$> f a)
                               (\(SomeException e) ->
                                  pure . Left . displayException $ e)
 
 filterAndReportFailures :: [(a, Either String b)] -> IO [(a,b)]
 filterAndReportFailures = foldMap checkFail
-  where checkFail (file, contOrFail) = 
+  where checkFail (file, contOrFail) =
           either
           (\err -> do hPutStrLn stderr err
                       pure []
@@ -58,7 +60,7 @@ createOutputDirectoryOrExit b outDir =
 
 createOutputDirectory :: Bool -> FilePath -> IO Bool
 createOutputDirectory b dir = do
-  create <- ifM 
+  create <- ifM
               (doesDirectoryExist dir)
               (do override <- (b ||) <$> confirmOverwrite "Output directory exists. Override?"
                   when override (removeDirectoryRecursive dir)
@@ -70,15 +72,20 @@ createOutputDirectory b dir = do
 ifM :: Monad m => m Bool -> m b -> m b -> m b
 ifM mb t f = mb >>= \b -> if b then t else f
 
-txtsToRenderedHtml :: [(FilePath, String)] -> [(FilePath, String)]
-txtsToRenderedHtml ts = (indexHead ts :) . map (convertFile . toOutputMarkupFile) $ ts
-  where toOutputMarkupFile (path, cont) = 
+txtsToRenderedHtml :: [(FilePath, String)] -> Reader Env [(FilePath, String)]
+txtsToRenderedHtml ts = do
+  env <- ask
+  let toOutputMarkupFile (path, cont) =
           (takeBaseName path <.> "html", M.parseMarkup cont)
- 
-        convertFile (path, markup) =
-          (path, H.render . convert path $ markup)
-        
-        indexHead f = ("index.html", H.render . buildIndex . map toOutputMarkupFile $ f)
+
+      convertFile (path, markup) =
+          (,) path (H.render . convert env path $ markup)
+
+      indexHead f = 
+        (,) "index.html" <$> H.render $ let newfiles = toOutputMarkupFile <$> f
+                                         in runReader (buildIndex newfiles) env
+
+  pure $ (indexHead ts :) . map (convertFile . toOutputMarkupFile) $ ts
 
 copyFiles :: FilePath -> [FilePath] -> IO ()
 copyFiles outDir fs = void . filterAndReportFailures =<< applyIoOnList copyFromTo fs
@@ -88,23 +95,28 @@ writeFiles :: [Char] -> [(FilePath, String)] -> IO ()
 writeFiles outDir fs = void . filterAndReportFailures =<< applyIoOnList writeFileContent fs
   where writeFileContent (f, cont) = writeFile (outDir </> f) cont
 
-convertDirectory :: Bool -> FilePath -> FilePath -> IO ()
-convertDirectory overwrite inpDir outDir = do
+convertDirectory :: Env -> FilePath -> FilePath -> IO ()
+convertDirectory env inpDir outDir = do
   DirContents toProcess toCopy <- getDirFilesAndContent inpDir
-  createOutputDirectoryOrExit overwrite outDir
-  let outputHtmls = txtsToRenderedHtml toProcess
+  createOutputDirectoryOrExit (overwrite env) outDir
+  let outputHtmls = runReader (txtsToRenderedHtml toProcess) env
 
   copyFiles outDir toCopy
   writeFiles outDir outputHtmls
   putStrLn "Done!"
 
-buildIndex :: [(FilePath, M.Document)] -> H.Html
-buildIndex files =
+buildIndex :: [(FilePath, M.Document)] -> Reader Env H.Html
+buildIndex files = do
+  env <- ask
   let previews = map (uncurry indexBuilder) files
 
-  in H.html_ "Tobi Blog"
-    (H.h_ 1 (H.link_ "index.html" (H.txt_ "Blog"))
-          <> H.h_ 2 (H.txt_ "Posts") <> mconcat previews)
+      h = H.title_ (eBlogName env) <> H.stylesheet_ (eStylesheetPath env)
+
+      b = H.h_ 1 (H.link_ "index.html" (H.txt_ "Blog"))
+          <> H.h_ 2 (H.txt_ "Posts") <> mconcat previews
+
+  pure $ H.html_ h b
+
 
 
 indexBuilder :: String -> [M.Structure] -> H.Structure

@@ -14,6 +14,7 @@ import System.Directory
 import System.Environment
 import Control.Monad (when)
 import System.IO
+import HsBlog.Env (defaultEnv)
 
 main :: IO ()
 main = do args <- getArgs
@@ -40,7 +41,7 @@ confirmOverwrite out  =
                  confirmOverwrite out
 
 process :: String -> String -> String
-process title = H.render . convert title . M.parseMarkup
+process title = H.render . convert defaultEnv title . M.parseMarkup
 
 whenIO :: Monad m => m Bool -> m () -> m ()
 whenIO cond action =

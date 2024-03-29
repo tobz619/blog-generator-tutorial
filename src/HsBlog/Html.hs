@@ -1,6 +1,7 @@
 module HsBlog.Html
     ( Html
     , Structure
+    , Head
     , p_
     , h_
     , ul_
@@ -14,6 +15,8 @@ module HsBlog.Html
     , link_
     , img_
     , txt_
+    , stylesheet_
+    , title_
     , ) where
 
 import HsBlog.Html.Internal

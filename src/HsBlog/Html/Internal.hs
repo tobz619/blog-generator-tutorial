@@ -7,6 +7,8 @@ newtype Content = Content { getContent :: String } deriving Show
 
 newtype Structure = Structure {getStructureString :: String} deriving Show
 
+newtype Head = Head {getHeadInfo :: String} deriving Show
+
 instance Semigroup Structure where
     (<>) c1 c2 =
         Structure (getStructureString c1 <> getStructureString c2)
@@ -19,6 +21,13 @@ instance Semigroup Content where
 
 instance Monoid Content where
   mempty = Content ""
+
+instance Semigroup Head where
+  (<>) h1 h2 =
+    Head (getHeadInfo h1 <> getHeadInfo h2)
+  
+instance Monoid Head where
+  mempty = Head "" 
 
 -- | Base case for when the list is empty
 empty_ :: Structure
@@ -33,8 +42,21 @@ elAttr tag attrs content =
   "<" <> tag <> " " <> attrs <>">" <> content <> "</" <> tag <> ">"
 
 -- | Basic html tags
-head_, p_ :: Content -> Structure
-head_  = Structure . el "head"  . getContent
+head_ :: String -> Head 
+head_  = Head . el "head" 
+
+title_ :: String -> Head
+title_ = Head . el "title" . escape
+
+stylesheet_ :: FilePath -> Head
+stylesheet_ path = Head $ 
+  "<link rel=\"stylesheet\" type=\"text/css\" href=\"" <> escape path <> "\">"
+
+meta_ :: String -> String -> Head
+meta_ name cont = Head $
+  "<meta name=\"" <> escape name <> "\" content=\"" <> escape cont <> "\">"
+
+p_ :: Content -> Structure
 p_ = Structure . el "p" . getContent
 
 h_ :: Natural -> Content -> Structure
@@ -49,8 +71,8 @@ ul_ = Structure . el "ul" . concatMap (el "li" . getStructureString)
 ol_ = Structure . el "ol" . concatMap (el "li" . getStructureString)
 
 -- | Creates a html string from a string and a structure
-html_ :: String -> Structure -> Html
-html_ title cont = Html $ el "title" title <> getStructureString  cont
+html_ :: Head -> Structure -> Html
+html_ (Head h) cont = Html $ el "head" h <> el "body" (getStructureString  cont)
 
 txt_ :: String -> Content
 txt_ = Content . escape

@@ -9,9 +9,10 @@ module OptParser
 import Options.Applicative 
 import Data.Maybe (fromMaybe)
 import Data.Char (toUpper)
+import HsBlog.Env(Env(..), defaultEnv)
 
-data Options = ConvertSingle SingleInput SingleOutput Replace
-             | ConvertDir FilePath FilePath Replace 
+data Options = ConvertSingle SingleInput SingleOutput Env
+             | ConvertDir FilePath FilePath Env 
              deriving Show
 
 data SingleInput = Stdin
@@ -22,16 +23,15 @@ data SingleOutput = Stdout
                   | OutputFile FilePath
                   deriving Show
 
-type Replace = Bool
-
 parse :: IO Options
 parse = execParser opts
 
 opts :: ParserInfo Options
-opts = info (helper <*> pOptions) ( fullDesc 
-                                    <> header "hs-blog-generator - a static blog generator"
-                                    <> progDesc "Convert markup files or directories to html"
-                                    )
+opts = info (helper <*> pOptions) 
+            ( fullDesc 
+              <> header "hs-blog-generator - a static blog generator"
+              <> progDesc "Convert markup files or directories to html"
+            )
 
 pOptions :: Parser Options
 pOptions = subparser $ pConvertSingleCommand <> pConvertDirCommand
@@ -58,7 +58,7 @@ pOutputFile :: Parser SingleOutput
 pOutputFile = OutputFile <$> out "file"
 
 pConvertSingle :: Parser Options
-pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput <*> pReplace
+pConvertSingle = ConvertSingle <$> pSingleInput <*> pSingleOutput <*> pEnv
 
 pSingleInput :: Parser SingleInput
 pSingleInput = fromMaybe Stdin <$> optional pInputFile
@@ -75,7 +75,7 @@ pConvertSingleCommand = command "convert" pConvertSingleInfo
 ---------------------------------------------------------------------
 
 pConvertDir :: Parser Options
-pConvertDir = ConvertDir <$> inp "directory" <*> out "directory" <*> repOption
+pConvertDir = ConvertDir <$> inp "directory" <*> out "directory" <*> pEnv
 
 pConvertDirCommandInfo :: ParserInfo Options
 pConvertDirCommandInfo = info (helper <*> pConvertDir) (progDesc "Convert a directory of markup files to html")
@@ -84,17 +84,35 @@ pConvertDirCommand :: Mod CommandFields Options
 pConvertDirCommand = command "convert-dir" pConvertDirCommandInfo
 
 ---------------------------------------------------------------------
-repOption :: Parser Bool
-repOption = switch (long "replace"
-                <> short 'r'
-                <> help "Automatically replace if file or dir already exists")
 
+pEnv :: Parser Env
+pEnv =  Env <$> pBlogName <*> pStylesheet <*> pReplace
+
+-------------------------
+
+pBlogName :: Parser String
+pBlogName = strOption (
+    long "name"
+    <> short 'N'
+    <> metavar "STRING"
+    <> help "blog name"
+    <> value (eBlogName defaultEnv)
+    <> showDefault
+    )
+
+pStylesheet :: Parser FilePath
+pStylesheet = strOption (
+    long "stylesheet"
+    <> short 'S'
+    <> metavar "FILE"
+    <> help "stylesheet filename"
+    <> value (eStylesheetPath defaultEnv)
+    <> showDefault
+    )
 
 pReplace :: Parser Bool
-pReplace = repOption
-
-pReplaceCommandInfo :: ParserInfo Bool
-pReplaceCommandInfo = info (helper <*> repOption) (progDesc "Automatically replace if file or dir already exists")
-
-pReplaceCommand :: Mod CommandFields Bool
-pReplaceCommand = command "replace" pReplaceCommandInfo
+pReplace = switch (
+    long "replace"
+    <> short 'r'
+    <> help "Automatically replace if file or dir already exists"
+    )

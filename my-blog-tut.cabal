@@ -67,6 +67,8 @@ library
                         HsBlog.Html
                             HsBlog.Html.Internal
                         HsBlog.Markup
+                        HsBlog.Env
+                        HsBlog.Directory
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -78,6 +80,7 @@ library
     build-depends:    base ^>=4.17.2.1
                     , directory
                     , filepath
+                    , mtl
 
     -- Directories containing source files.
     hs-source-dirs:   src

@@ -1,6 +1,7 @@
 module Main where
 
 import qualified HsBlog
+import qualified HsBlog.Directory
 import OptParser
 
 import System.Exit
@@ -8,15 +9,17 @@ import System.Directory
 import System.IO
 import Control.Applicative ((<|>))
 import Control.Exception (bracket, finally)
+import HsBlog.Env (Env(..))
+
 
 main :: IO ()
 main = do
     options <- parse
     case options of
-        ConvertDir inp out b -> HsBlog.convertDirectory inp out b
+        ConvertDir inp out env -> HsBlog.Directory.convertDirectory env inp out 
 
-        ConvertSingle inp out b ->
-            withInp inp (\t -> withOut b out . HsBlog.convertSingle t)
+        ConvertSingle inp out env ->
+            withInp inp (\t -> withOut (overwrite env) out . HsBlog.convertSingle t)
 
 
 
