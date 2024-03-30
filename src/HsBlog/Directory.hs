@@ -14,12 +14,10 @@ import System.FilePath
 import System.Directory
 import System.Exit
 import Control.Exception (catch, displayException, SomeException(..))
-import Data.Either (fromRight)
 import System.IO (hPutStrLn, stderr)
 import HsBlog (whenIO, confirmOverwrite)
-import Data.Foldable (traverse_)
 import HsBlog.Env (Env(..))
-import Control.Monad.Reader(Reader(..), asks, ask, ReaderT (runReaderT), lift, runReader)
+import Control.Monad.Reader(Reader, ask, runReader)
 
 data DirContents = DirContents {
     dcFilesToProcess :: [(FilePath, String)]

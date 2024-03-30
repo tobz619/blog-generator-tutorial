@@ -8,7 +8,7 @@ module HsBlog
 
 import qualified HsBlog.Markup as M 
 import qualified HsBlog.Html as H
-import HsBlog.Convert (convert, convertStructure)
+import HsBlog.Convert (convert)
 
 import System.Directory
 import System.Environment
